@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-
 const db = require('./config/db');
 
 const app = express();
@@ -93,6 +92,24 @@ app.delete('/users/:id', (req, res) => {
         }
     });
 });
+
+//Login API
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+    const sql = 'SELECT * FROM users WHERE email = ? AND password = ?';
+    db.query(sql, [email, password], (err, results) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            if (results.length > 0) {
+                res.json({ message: 'Login successful', user: results[0] });
+            } else {
+                res.status(401).json({ message: 'Invalid email or password' });
+            }
+        }
+    });
+});
+
 
 app.listen(5000, () => {
     console.log('Server running on port 5000');
