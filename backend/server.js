@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const db = require('./config/db');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 
@@ -27,9 +28,10 @@ app.get('/test-db' ,(req, res) => {
 // Create a new user
 app.post('/users' , (req, res) => {
     const { username, phone, email, roles, password } = req.body;
+    const hashedPassword = bcrypt.hashSync(password, 10);
     const sql = `INSERT INTO users (username, phone, email, roles, password) VALUES (?, ?, ?, ?, ?)`;
     
-    db.query(sql, [username, phone, email, roles, password], (err, results) => {
+    db.query(sql, [username, phone, email, roles, hashedPassword], (err, results) => {
         if (err) {
             console.log(err);
             res.status(500).json({ error: err.message });
@@ -96,15 +98,22 @@ app.delete('/users/:id', (req, res) => {
 //Login API
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
-    const sql = 'SELECT * FROM users WHERE email = ? AND password = ?';
-    db.query(sql, [email, password], (err, results) => {
+    const sql = 'SELECT * FROM users WHERE email = ?';
+    db.query(sql, [email], async (err, results) => {
         if (err) {
             res.status(500).json({ error: err.message });
         } else {
             if (results.length > 0) {
-                res.json({ message: 'Login successful', user: results[0] });
+                const user = results[0];
+                // Compare the provided password with the hashed password
+                const isMatch = await bcrypt.compareSync(password, user.password);
+                if (isMatch) {
+                    res.json({ message: 'Login success', user });
+                } else {
+                    res.status(401).json({ message: 'Invalid email or password' });
+                }
             } else {
-                res.status(401).json({ message: 'Invalid email or password' });
+                res.status(404).json({ message: 'User not found' });
             }
         }
     });
