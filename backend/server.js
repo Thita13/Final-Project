@@ -27,11 +27,19 @@ app.get('/test-db' ,(req, res) => {
 
 // Create a new user
 app.post('/users' , (req, res) => {
-    const { username, phone, email, roles, password } = req.body;
+    const { username,
+            phone,
+            email, 
+            roles, 
+            password } = req.body;
     const hashedPassword = bcrypt.hashSync(password, 10);
     const sql = `INSERT INTO users (username, phone, email, roles, password) VALUES (?, ?, ?, ?, ?)`;
-    
-    db.query(sql, [username, phone, email, roles, hashedPassword], (err, results) => {
+    db.query(sql, 
+        [   username, 
+            phone, 
+            email, 
+            roles, 
+            hashedPassword], (err, results) => {
         if (err) {
             console.log(err);
             res.status(500).json({ error: err.message });
@@ -71,9 +79,19 @@ app.get('/users/:id', (req, res) => {
 // Update user by ID
 app.put('/users/:id', (req, res) => {
     const id = req.params.id;
-    const { username, phone, email, roles, password } = req.body;
+    const { username, 
+            phone, 
+            email, 
+            roles, 
+            password } = req.body;
     const sql = 'UPDATE users SET username = ?, phone = ?, email = ?, roles = ?, password = ? WHERE id_users = ?';
-    db.query(sql, [username, phone, email, roles, password, id], (err, results) => {
+    db.query(sql, 
+        [   username, 
+            phone, 
+            email, 
+            roles, 
+            password, 
+            id ], (err, results) => {
         if (err) {
             res.status(500).json({ error: err.message });
         } else {
@@ -118,6 +136,124 @@ app.post('/login', (req, res) => {
         }
     });
 });
+
+// Create a new task
+app.post('/tasks', (req, res) => {
+    const { customer_name,
+            location_name,
+            customer_phone,
+            task_type,
+            description,
+            status_name,
+            start_at,
+            completed_at,
+            created_by,
+            assigned_to_interior,
+            assigned_to_pricing } = req.body;
+
+    const sql = `INSERT INTO tasks
+        (   customer_name,
+            location_name,
+            customer_phone,
+            task_type,
+            description,
+            status_name,
+            start_at,
+            completed_at,
+            created_by,
+            assigned_to_interior,
+            assigned_to_pricing )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        
+    db.query(sql,
+        [   customer_name,
+            location_name,
+            customer_phone,
+            task_type,
+            description,
+            status_name,
+            start_at,
+            completed_at,
+            created_by,
+            assigned_to_interior,
+            assigned_to_pricing ], (err, result) => {
+            if (err) {res.status(500).json({error: err.message});
+            } else {res.json({message: 'Task created successfully',result});
+            }
+        }
+    );
+});
+
+// Get all tasks
+app.get('/tasks', (req, res) => {
+    const sql = 'SELECT * FROM tasks';
+    db.query(sql, (err, results) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Get task by ID
+app.get('/tasks/:id', (req, res) => {
+    const id = req.params.id;
+    const sql = 'SELECT * FROM tasks WHERE id_task = ?';
+    db.query(sql, [id], (err, results) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Update task by ID
+app.put('/tasks/:id', (req, res) => {
+    const id = req.params.id;
+    const { customer_name,
+            location_name,
+            customer_phone,
+            task_type,
+            description,
+            status_name,
+            start_at,
+            completed_at,
+            assigned_to_interior,
+            assigned_to_pricing } = req.body;
+    const sql = `UPDATE tasks SET
+        customer_name = ?,
+        location_name = ?,
+        customer_phone = ?, 
+        task_type = ?,
+        description = ?,
+        status_name = ?,
+        start_at = ?,
+        completed_at = ?,
+        assigned_to_interior = ?,
+        assigned_to_pricing = ?
+        WHERE id_task = ?`;
+    db.query(sql,
+        [   customer_name,
+            location_name,
+            customer_phone,
+            task_type,
+            description,
+            status_name,
+            start_at,
+            completed_at,
+            assigned_to_interior,
+            assigned_to_pricing,
+            id ], (err, results) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json({ message: 'Task updated successfully', result: results });
+        }
+    });
+});
+
 
 
 app.listen(5000, () => {
